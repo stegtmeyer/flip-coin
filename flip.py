@@ -107,11 +107,19 @@ def getUserInput():
 
 	return timesToFlipCoin, timesToRunFlipCoin
 
-def getFlipsAnalysis(timesToFlipCoin, timesToRunFlipCoin):
-	flipsAnalysis = []
+def getFlipsRuns(timesToFlipCoin, timesToRunFlipCoin):
+	flipsRuns = []
 	j = 0
 	for j in range(timesToRunFlipCoin):
-		flipsAnalysis.append(analyzeOneRun(flip(timesToFlipCoin)))
+		flipsRuns.append(flip(timesToFlipCoin))
+
+	return flipsRuns
+
+def getFlipAnalysis(flipsRuns):
+	flipsAnalysis = []
+	j = 0
+	for j in range(len(flipsRuns)):
+		flipsAnalysis.append(analyzeOneRun(flipsRuns[j]))
 
 	return flipsAnalysis
 
@@ -134,11 +142,14 @@ def userOutputMultipleRunAnalysis(flipsAnalysis):
 	print("The longest string of tails in a row was:", multipleRunsAnalysis["mostTailsConsecutiveAllRuns"])
 	print("The longest string of heads in a row was:", multipleRunsAnalysis["mostHeadsConsecutiveAllRuns"])
 
+# -----------------------------
 # ------- Begin Program -------
+# -----------------------------
 timesToFlipCoin, timesToRunFlipCoin = getUserInput()
 
 print("\nThe following simulates [", timesToFlipCoin, "] coin flips [", timesToRunFlipCoin, "] times and displays the results.")
 
-flipsAnalysis = getFlipsAnalysis(timesToFlipCoin, timesToRunFlipCoin)
+flipsRuns = getFlipsRuns(timesToFlipCoin, timesToRunFlipCoin)
+flipsAnalysis = getFlipAnalysis(flipsRuns)
 userOutputEachRunAnalysis(flipsAnalysis)
 userOutputMultipleRunAnalysis(flipsAnalysis)
