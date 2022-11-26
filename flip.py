@@ -142,6 +142,40 @@ def userOutputMultipleRunAnalysis(flipsAnalysis):
 	print("The longest string of tails in a row was:", multipleRunsAnalysis["mostTailsConsecutiveAllRuns"])
 	print("The longest string of heads in a row was:", multipleRunsAnalysis["mostHeadsConsecutiveAllRuns"])
 
+def getBetStrategyOne():
+	doubleAfterFirstNConsecutiveLosses = (False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+	halveAfterBreakEven = True
+	betStrategy = {'minBetSize': 10, 'doubleAfterFirstNConsecutiveLosses': doubleAfterFirstNConsecutiveLosses, 'halveAfterBreakEven': True}
+	return betStrategy
+
+def applyBetStrategyToOneFlipRun(flipsRun, betStrategy):
+	i = 0
+	betStrategyResult = {}
+	moneyWon = 0
+	for i in range(len(flipsRun)):
+		if flipsRun[i] == 0:
+			moneyWon += betStrategy['minBetSize']
+		else:
+			moneyWon -= betStrategy['minBetSize']
+
+	betStrategyResult = {'moneyWon': moneyWon}
+
+	return betStrategyResult
+
+def applyBetStrategyToMultipleFlipRuns(flipsRuns, betStrategy):
+	i = 0
+	betStrategyResults = []
+	for i in range(len(flipsRuns)):
+		betStrategyResults.append(applyBetStrategyToOneFlipRun(flipsRuns[i], betStrategy))
+
+	return betStrategyResults
+
+def userOutputBetStrategyResults(betStrategyResults):
+	i = 0
+	for i in range(len(betStrategyResults)):
+		print("\nAmount of money won in run [", i, "] is: $", betStrategyResults[i]['moneyWon'])
+
+
 # -----------------------------
 # ------- Begin Program -------
 # -----------------------------
@@ -153,3 +187,7 @@ flipsRuns = getFlipsRuns(timesToFlipCoin, timesToRunFlipCoin)
 flipsAnalysis = getFlipAnalysis(flipsRuns)
 userOutputEachRunAnalysis(flipsAnalysis)
 userOutputMultipleRunAnalysis(flipsAnalysis)
+
+betStrategy = getBetStrategyOne()
+betStrategyResults = applyBetStrategyToMultipleFlipRuns(flipsRuns, betStrategy)
+userOutputBetStrategyResults(betStrategyResults)
