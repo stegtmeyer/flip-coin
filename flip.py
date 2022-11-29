@@ -1,50 +1,5 @@
 import random, os, time, datetime, argparse
 
-def analyzeOneRun(flipResults):
-	numHeads = 0
-	numTails = 0
-	mostHeadsConsecutive = 0
-	mostTailsConsecutive = 0
-	numTailsConsecutive = 0
-	numHeadsConsecutive = 0
-	flipsAnalysis = {}
-	
-	for i in range(len(flipResults)):
-		if flipResults[i] == 0:
-			numHeads += 1
-			numHeadsConsecutive += 1
-			if mostTailsConsecutive < numTailsConsecutive:
-				mostTailsConsecutive = numTailsConsecutive
-				numTailsConsecutive = 0
-			else:
-				numTailsConsecutive = 0
-		else:
-			numTails += 1
-			numTailsConsecutive += 1
-			if mostHeadsConsecutive < numHeadsConsecutive:
-				mostHeadsConsecutive = numHeadsConsecutive
-				numHeadsConsecutive = 0
-			else:
-				numHeadsConsecutive = 0
-
-	if mostTailsConsecutive < numTailsConsecutive:
-		mostTailsConsecutive = numTailsConsecutive
-	if mostHeadsConsecutive < numHeadsConsecutive:
-		mostHeadsConsecutive = numHeadsConsecutive
-
-	tailsPercent, headsPercent, difference = calculatePercentagesAndDifference(numHeads, numTails)
-	flipsAnalysis = {
-			'numHeads': numHeads, 
-			'numTails': numTails, 
-			'mostHeadsConsecutive': mostHeadsConsecutive, 
-			'mostTailsConsecutive': mostTailsConsecutive, 
-			'tailsPercent': tailsPercent, 
-			'headsPercent': headsPercent, 
-			'difference': difference
-			}
-
-	return flipsAnalysis
-
 def flip(timesToFlipCoin):
 	i = 0
 	flipResults = []
@@ -54,6 +9,67 @@ def flip(timesToFlipCoin):
 		flipResults.append(flip)
 	
 	return flipResults
+
+def analyzeOneRun(flipResults):
+	numHeads = 0
+	numTails = 0
+	mostHeadsConsecutive = 0
+	mostTailsConsecutive = 0
+	numTailsConsecutive = 0
+	numHeadsConsecutive = 0
+	tailsConsecutiveList = []
+	headsConsecutiveList = []
+	flipsAnalysis = {}
+
+	# Initializing assuming we will not have more consecutive flips in a row than listed
+	for i in range(40):
+		tailsConsecutiveList.append(0)
+	for i in range(40):
+		headsConsecutiveList.append(0)
+	
+	for i in range(len(flipResults)):
+		if flipResults[i] == 0:
+			numHeads += 1
+			numHeadsConsecutive += 1
+			if numTailsConsecutive > 0:
+				tailsConsecutiveList[numTailsConsecutive] += 1
+				numTailsConsecutive = 0
+		else:
+			numTails += 1
+			numTailsConsecutive += 1
+			if numHeadsConsecutive > 0:
+				headsConsecutiveList[numHeadsConsecutive] += 1
+				numHeadsConsecutive = 0
+
+	if numTailsConsecutive > 0:
+		tailsConsecutiveList[numTailsConsecutive] += 1
+	else:
+		headsConsecutiveList[numHeadsConsecutive] += 1
+
+	for i in range(39, 0, -1):
+		if tailsConsecutiveList[i] > 0:
+			mostTailsConsecutive = i
+			break
+
+	for i in range(39, 0, -1):
+		if headsConsecutiveList[i] > 0:
+			mostHeadsConsecutive = i
+			break
+
+	tailsPercent, headsPercent, difference = calculatePercentagesAndDifference(numHeads, numTails)
+	flipsAnalysis = {
+			'numHeads': numHeads, 
+			'numTails': numTails, 
+			'mostHeadsConsecutive': mostHeadsConsecutive, 
+			'mostTailsConsecutive': mostTailsConsecutive, 
+			'headsConsecutiveList': headsConsecutiveList,
+			'tailsConsecutiveList': tailsConsecutiveList,
+			'tailsPercent': tailsPercent, 
+			'headsPercent': headsPercent, 
+			'difference': difference
+			}
+
+	return flipsAnalysis
 
 def calculatePercentagesAndDifference(numHeads, numTails):
 	tailsPercent = (100/timesToFlipCoin)*numTails
@@ -124,14 +140,18 @@ def getFlipAnalysis(flipsRuns):
 	return flipsAnalysis
 
 def userOutputEachRunAnalysis(flipsAnalysis):
-	j = 0
-	for j in range(len(flipsAnalysis)):
+	for i in range(len(flipsAnalysis)):
 		print("\n")
-		print("Tails was flipped", flipsAnalysis[j]['numTails'], "times, or", flipsAnalysis[j]['tailsPercent'], "% of the time.")
-		print("Heads was flipped", flipsAnalysis[j]['numHeads'], "times, or", flipsAnalysis[j]['headsPercent'], "% of the time.")
-		print("The difference between the two was", flipsAnalysis[j]['difference'], ".")
-		print("The longest string of tails in a row was:", flipsAnalysis[j]['mostTailsConsecutive'])
-		print("The longest string of heads in a row was:", flipsAnalysis[j]['mostHeadsConsecutive'])
+		print("Tails was flipped", flipsAnalysis[i]['numTails'], "times, or", flipsAnalysis[i]['tailsPercent'], "% of the time.")
+		print("Heads was flipped", flipsAnalysis[i]['numHeads'], "times, or", flipsAnalysis[i]['headsPercent'], "% of the time.")
+		print("The difference between the two was", flipsAnalysis[i]['difference'], ".")
+		print("The longest string of tails in a row was:", flipsAnalysis[i]['mostTailsConsecutive'])
+		print("The longest string of heads in a row was:", flipsAnalysis[i]['mostHeadsConsecutive'])
+		for j in range(39, 0, -1):
+			if flipsAnalysis[i]['headsConsecutiveList'][j] > 0:
+				print("Number of instances of [", j, "] consecutive heads is [", flipsAnalysis[i]['headsConsecutiveList'][j], "]")
+			if flipsAnalysis[i]['tailsConsecutiveList'][j] > 0:
+				print("Number of instances of [", j, "] consecutive tails is [", flipsAnalysis[i]['tailsConsecutiveList'][j], "]")
 
 def userOutputMultipleRunAnalysis(flipsAnalysis):
 	multipleRunsAnalysis = []
@@ -143,7 +163,7 @@ def userOutputMultipleRunAnalysis(flipsAnalysis):
 	print("The longest string of heads in a row was:", multipleRunsAnalysis["mostHeadsConsecutiveAllRuns"])
 
 def getBetStrategyOne():
-	doubleAfterFirstNConsecutiveLosses = (False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+	doubleAfterFirstNConsecutiveLosses = (False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
 	halveAfterBreakEven = True
 	betStrategy = {'minBetSize': 10, 'doubleAfterFirstNConsecutiveLosses': doubleAfterFirstNConsecutiveLosses, 'halveAfterBreakEven': True}
 	return betStrategy
@@ -152,11 +172,29 @@ def applyBetStrategyToOneFlipRun(flipsRun, betStrategy):
 	i = 0
 	betStrategyResult = {}
 	moneyWon = 0
+	numTailsConsecutive = 0
+	currentBetSize = betStrategy['minBetSize']
+	amountToBreakEven = [0]
+
 	for i in range(len(flipsRun)):
 		if flipsRun[i] == 0:
-			moneyWon += betStrategy['minBetSize']
+			numTailsConsecutive = 0
+			moneyWon += currentBetSize
+			if betStrategy['halveAfterBreakEven'] and amountToBreakEven[-1] > 0:
+				amountToBreakEven[-1] -= currentBetSize
+				if amountToBreakEven[-1] <= 0:
+					currentBetSize /= 2
+					amountToBreakEven.pop()
+					print("\nHalving bet size to [", currentBetSize, "] with new amountToBreakEven [", amountToBreakEven[-1], "] with moneywon [", moneyWon, "]")
+
 		else:
-			moneyWon -= betStrategy['minBetSize']
+			numTailsConsecutive += 1
+			moneyWon -= currentBetSize
+			if betStrategy['doubleAfterFirstNConsecutiveLosses'][numTailsConsecutive]:
+				if betStrategy['halveAfterBreakEven']:
+					amountToBreakEven.append(currentBetSize * numTailsConsecutive)
+				currentBetSize *= 2	
+				print("\nDoubling bet size to [", currentBetSize, "] with amountToBreakEven [", amountToBreakEven[-1], "] with moneywon [", moneyWon, "]")
 
 	betStrategyResult = {'moneyWon': moneyWon}
 
@@ -185,9 +223,9 @@ print("\nThe following simulates [", timesToFlipCoin, "] coin flips [", timesToR
 
 flipsRuns = getFlipsRuns(timesToFlipCoin, timesToRunFlipCoin)
 flipsAnalysis = getFlipAnalysis(flipsRuns)
-userOutputEachRunAnalysis(flipsAnalysis)
-userOutputMultipleRunAnalysis(flipsAnalysis)
-
 betStrategy = getBetStrategyOne()
 betStrategyResults = applyBetStrategyToMultipleFlipRuns(flipsRuns, betStrategy)
+
+userOutputEachRunAnalysis(flipsAnalysis)
 userOutputBetStrategyResults(betStrategyResults)
+userOutputMultipleRunAnalysis(flipsAnalysis)
